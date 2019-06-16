@@ -5,7 +5,6 @@
 #define ID_SIZE_in_BITS 12 // we need to accomodate for both unique leaf ids and header ids.
 #define NUM_HOSTS 48
 
-
 // Header types
 
 header_type ethernet_t {
@@ -51,9 +50,6 @@ header_type vxlan_t {
     }
 }
 
-
-
-
 header_type bitmap_t {
     fields {
         id : ID_SIZE_in_BITS;
@@ -62,11 +58,7 @@ header_type bitmap_t {
     }
 }
 
-
-
-
 // Parser functions
-
 
 parser start {
     return parse_ethernet;
@@ -170,9 +162,6 @@ parser parse_vxlan {
         default: parse_inner_ethernet;
 }
 
-
-
-
 metadata bitmap_t bitmap_leaf_hdr_;
 header bitmap_t bitmap_hdr0_;
 
@@ -233,9 +222,6 @@ parser parse_bitmap_default_hdr {
     return parse_inner_ethernet;
     }
 }
-
-
-
 
 header ethernet_t inner_ethernet_;
 
@@ -315,29 +301,24 @@ parser parse_inner_udp {
     return ingress;
 }
 
-
-
-
-extern action bitmap_output_select(bitmap);  // The extern action for bitmap-based port selection
+extern action bitmap_port_select(bitmap);  // The extern action for bitmap-based port selection
 
 action bitmap_leaf_hdr_action() {
-    bitmap_output_select(bitmap_leaf_hdr_.bitmap);
+    bitmap_port_select(bitmap_leaf_hdr_.bitmap);
 }
 
 action inner_ipv4_bitmap_action(bitmap) {
-    bitmap_output_select(bitmap);
+    bitmap_port_select(bitmap);
 }
 
 action bitmap_default_hdr_action() {
-    bitmap_output_select(bitmap_default_hdr_.bitmap);
+    bitmap_port_select(bitmap_default_hdr_.bitmap);
 }
 
 table bitmap_table {
     reads {
         bitmap_leaf_hdr_.id : exact;  // This will be a least priority rule in the table
         inner_ipv4_.dstAddr : exact;  // The group/topic identifier
-//        bitmap_default_hdr_.id : exact;  // A default action is specified at runtime (which will be
-                                           // bitmap_default_hdr_action()
     }
     actions {
         leaf_hdr_action;
